@@ -14,4 +14,4 @@
 #SBATCH --mail-user=ruobin.han@yale.edu
 module load miniconda
 conda activate qutip-env
-python3 ising.py multiprocess:True t_min:0.1 t_max:5.0 t_step:0.005 N:100 n_steps:600000 n_burnin:450000 n_analyze:50000 flip_perc:0.01
+python3 ising.py multiprocess:True t_min:0.1 t_max:5.0 t_step:0.005 N:100 n_steps:10000 n_burnin:5000 n_analyze:5000 flip_perc:0.1
