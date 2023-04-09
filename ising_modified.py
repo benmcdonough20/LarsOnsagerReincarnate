@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import multiprocess as mp
 import datetime
 # from IsingLattice import IsingLattice as IsingLattice_c
-from sys import exit, argv
+from sys import exit, argv, stdout
 # from pandas import DataFrame
 # from tqdm import tqdm #fancy progress bar generator
 # from ising_c import run_ising #import run_ising function from ising.py
@@ -70,12 +70,12 @@ def set_input(cmd_line_args):
     """
 
     inp = dict()
-    inp['t_min']      = 0.1    # minimum temperature
-    inp['t_max']      = 5.0    # maximum temperature
-    inp['t_step']     = 0.01    # step size from min to max temperature
+    inp['t_min']      = 2    # minimum temperature
+    inp['t_max']      = 3    # maximum temperature
+    inp['t_step']     = 0.02    # step size from min to max temperature
     inp['t_top']      = 4.0    # start temperature (arbitrary; feel free to change)
     inp['N']          = 100     # sqrt(lattice size) (i.e. lattice = N^2 points
-    inp['n_steps']    = 4000000  # number of lattice steps in simulation
+    inp['n_steps']    = 100000  # number of lattice steps in simulation
     inp['n_burnin']   = int(inp['n_steps']*0.5)   # optional parameter, used as naive default
     inp['n_analyze']  = int(inp['n_steps']*0.3)   # number of lattice steps at end of simulation calculated for averages and std.dev.
     # inp['J']          = 1.0    # **great** default value -- spin-spin interaction strength
@@ -315,21 +315,25 @@ def run_indexed_process( inp, T):
 # def run_simulation(
 #         temp, n, num_steps, num_burnin, num_analysis, flip_prop, j, b, data_filename, corr_filename, data_listener, corr_listener):
     print("Starting Temp {0}".format(round(T,3)))
+    stdout.flush()
     try:
         E, M, C = run_ising_lattice(inp, T, skip_print=True)
         # data_listener.put(([T,E.mean(),E.std(), M.mean(), M.std()], [T,]+[x[1] for x in C]))
         # corr_listener.put([T,]+[x[1] for x in C])
         print("Finished Temp {0}".format(round(T,3)))
+        stdout.flush()
         return T,E,M,C
 
     except KeyboardInterrupt:
         print("\n\nProgram Terminated. Good Bye!")
+        stdout.flush()
         # data_listener.put('kill')
         # corr_listener.put('kill')
         sys.exit()
 
     except:
         logging.error("Temp="+str(round(T,3))+": Simulation Failed. No Data Written")
+        stdout.flush()
         return False
 
 # def listener(queue, inp, data):
