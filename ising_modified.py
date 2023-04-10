@@ -8,7 +8,7 @@ import numpy as np
 # import logging
 import matplotlib.pyplot as plt
 import multiprocessing as mp
-import datetime
+import datetime as dt
 # from IsingLattice import IsingLattice as IsingLattice_c
 from sys import exit, argv, stdout
 # from pandas import DataFrame
@@ -324,7 +324,8 @@ def run_indexed_process(input):
         # data_listener.put(([T,E.mean(),E.std(), M.mean(), M.std()], [T,]+[x[1] for x in C]))
         # corr_listener.put([T,]+[x[1] for x in C])
         end=time.time()
-        print(f"Finished Temp {round(T,3)} in {datetime.timedelta(seconds=end-start)}")
+        print(f"Finished Temp {round(T,3)} in {dt.timedelta(seconds=end-start)}")
+        print(f'Current time:{dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}')
         stdout.flush()
         return T,E,M,C
 
@@ -368,16 +369,22 @@ def run_multi_core(inp):
     corr_writer.writerow([inp['N'], inp['n_steps'], inp['n_analyze'], inp['flip_perc']])
     corr_writer.writerow([])
     corr_writer.writerow(['Temp']+['d=%i'%i for i in range(1,int(inp['N']/2)+1)])
-
+    data_f_out.close()
+    corr_f_out.close()
     #fire off workers 
     # jobs= [pool.apply_async(run_indexed_process,args=(inp,T)) for T in T_array]
+    #I'm doing this stupid opening and closing so that maybe the file actually saves between writes. I'm not sure what's up with this
     pool = mp.Pool(mp.cpu_count())
     for result in pool.imap_unordered(run_indexed_process, [(inp,T) for T in T_array]):
+        data_f_out=open(data_filename,'a')
+        corr_f_out=open(corr_filename,'a')
+        data_writer = csv.writer(data_f_out, delimiter=',', lineterminator='\n')
+        corr_writer = csv.writer(corr_f_out, delimiter=',', lineterminator='\n')
         T,E,M,C = result
         data_writer.writerow((T, E.mean(), E.std(), M.mean(), M.std() ) )
         corr_writer.writerow([T,]+[x[1] for x in C])
-    data_f_out.close()
-    corr_f_out.close()
+        data_f_out.close()
+        corr_f_out.close()
     # collect results from the workers through the pool result queue   
     # results = [job.get() for job in jobs]
 
@@ -410,4 +417,4 @@ if __name__ == "__main__":
     if not inp['multiprocess']:
         run_single_core(inp)
     end=time.time()
-    print('runtime:',str(datetime.timedelta(seconds=end-start)))
+    print('runtime:',str(dt.timedelta(seconds=end-start)))
