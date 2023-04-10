@@ -7,7 +7,7 @@ import logging
 import numpy as np
 # import logging
 import matplotlib.pyplot as plt
-import multiprocess as mp
+import multiprocessing as mp
 import datetime
 # from IsingLattice import IsingLattice as IsingLattice_c
 from sys import exit, argv, stdout
@@ -70,12 +70,13 @@ def set_input(cmd_line_args):
     """
 
     inp = dict()
-    inp['t_min']      = 2    # minimum temperature
-    inp['t_max']      = 3    # maximum temperature
-    inp['t_step']     = 0.02    # step size from min to max temperature
+    inp['t_min']      = 0.1    # minimum temperature
+    inp['t_max']      = 5.0    # maximum temperature
+    inp['t_step']     = 0.01    # step size from min to max temperature
+    inp['T_array']    = None    # array of termperatures if intervals desired are not uniform
     inp['t_top']      = 4.0    # start temperature (arbitrary; feel free to change)
     inp['N']          = 100     # sqrt(lattice size) (i.e. lattice = N^2 points
-    inp['n_steps']    = 100000  # number of lattice steps in simulation
+    inp['n_steps']    = 1000000  # number of lattice steps in simulation
     inp['n_burnin']   = int(inp['n_steps']*0.5)   # optional parameter, used as naive default
     inp['n_analyze']  = int(inp['n_steps']*0.3)   # number of lattice steps at end of simulation calculated for averages and std.dev.
     # inp['J']          = 1.0    # **great** default value -- spin-spin interaction strength
@@ -311,16 +312,19 @@ def print_results(inp, data, corr):
             writer.writerow(entry)
         f_out.close()
 
-def run_indexed_process( inp, T):
+def run_indexed_process(input):
+    inp,T = input
 # def run_simulation(
 #         temp, n, num_steps, num_burnin, num_analysis, flip_prop, j, b, data_filename, corr_filename, data_listener, corr_listener):
     print("Starting Temp {0}".format(round(T,3)))
     stdout.flush()
     try:
+        start=time.time()
         E, M, C = run_ising_lattice(inp, T, skip_print=True)
         # data_listener.put(([T,E.mean(),E.std(), M.mean(), M.std()], [T,]+[x[1] for x in C]))
         # corr_listener.put([T,]+[x[1] for x in C])
-        print("Finished Temp {0}".format(round(T,3)))
+        end=time.time()
+        print(f"Finished Temp {round(T,3)} in {datetime.timedelta(seconds=end-start)}")
         stdout.flush()
         return T,E,M,C
 
@@ -336,26 +340,9 @@ def run_indexed_process( inp, T):
         stdout.flush()
         return False
 
-# def listener(queue, inp, data):
-#     '''listen for messages on the queue
-#     appends messages to data'''
-#     # f = open(fn, 'a') 
-#     # writer = csv.writer(f, delimiter=',', lineterminator='\n')
-#     while True:
-#         message = queue.get()
-#         # print('message: ', message)
-#         if message == 'kill':
-#             data['data'].sort()
-#             data['corr'].sort()
-#             print_results(inp, data['data'], data['corr'])
-#             print ('Closing listener')
-#             # print('killing')
-#             break
-#         data['data'].append(message[0])
-#         data['corr'].append(message[1])
-#         # print('--------\n',data)
-
 def make_T_array(inp):
+    if inp['T_array'] is not None:
+        return inp['T_array']
     if inp['t_max'] <= inp['t_min']:
         return [inp['t_min'],]
     else:
@@ -363,40 +350,41 @@ def make_T_array(inp):
 
 
 def run_multi_core(inp):
-    print("\n2D Ising Model Simulation; multi-core\n")
+    print(f"\n2D Ising Model Simulation; multi-core:{mp.cpu_count()} cores\n")
+    
     T_array = make_T_array(inp)
+    data_filename, corr_filename = get_filenames(inp)
 
-    #must use Manager queue here, or will not work
-    manager = mp.Manager()
-    data_listener = manager.Queue()
-    # corr_listener = manager.Queue()    
-    pool = mp.Pool(mp.cpu_count())
-    print('#cpus:',mp.cpu_count())
+    data_f_out=open(data_filename,'w')
+    data_writer = csv.writer(data_f_out, delimiter=',', lineterminator='\n')
+    data_writer.writerow(['N', 'n_steps', 'n_analyze', 'flip_perc'])
+    data_writer.writerow([inp['N'], inp['n_steps'], inp['n_analyze'], inp['flip_perc']])
+    data_writer.writerow([])
+    data_writer.writerow(['Temp','E_mean','E_std','M_mean','M_std'])
 
-
-    # arrays of results:
-    # data = {'data':[], 'corr':[]}
-    data = []
-    corr = []
-
-    #put listener to work first
-    # data_watcher = pool.apply_async(listener, args=(data_listener, inp, data,))
-    # corr_watcher = pool.apply_async(listener, args=(corr_listener, inp, corr,))
+    corr_f_out=open(corr_filename,'w')
+    corr_writer = csv.writer(corr_f_out, delimiter=',', lineterminator='\n')
+    corr_writer.writerow(['N', 'n_steps', 'n_analyze', 'flip_perc'])
+    corr_writer.writerow([inp['N'], inp['n_steps'], inp['n_analyze'], inp['flip_perc']])
+    corr_writer.writerow([])
+    corr_writer.writerow(['Temp']+['d=%i'%i for i in range(1,int(inp['N']/2)+1)])
 
     #fire off workers 
-    jobs= [pool.apply_async(run_indexed_process,args=(inp,T,)) for T in T_array]
-
+    # jobs= [pool.apply_async(run_indexed_process,args=(inp,T)) for T in T_array]
+    pool = mp.Pool(mp.cpu_count())
+    for result in pool.imap_unordered(run_indexed_process, [(inp,T) for T in T_array]):
+        T,E,M,C = result
+        data_writer.writerow((T, E.mean(), E.std(), M.mean(), M.std() ) )
+        corr_writer.writerow([T,]+[x[1] for x in C])
+    data_f_out.close()
+    corr_f_out.close()
     # collect results from the workers through the pool result queue   
-    results = [job.get() for job in jobs]
-    for res in results:
-        temp,E,M,C=res
-        data.append( (temp, E.mean(), E.std(), M.mean(), M.std() ) )
-        corr.append([temp,]+[x[1] for x in C])
+    # results = [job.get() for job in jobs]
 
     # data_listener.put('kill')
     pool.close()
     pool.join()
-    print_results(inp, data, corr)
+    return
     
 def run_single_core(inp):
     print("\n2D Ising Model Simulation; single core\n")
@@ -412,7 +400,6 @@ def run_single_core(inp):
 
     if inp['plots']:
         plot_graphs(data)
-
 
 if __name__ == "__main__":
     """Main program: run Ising Lattice here"""
