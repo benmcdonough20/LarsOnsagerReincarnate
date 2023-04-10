@@ -70,13 +70,13 @@ def set_input(cmd_line_args):
     """
 
     inp = dict()
-    inp['t_min']      = 0.1    # minimum temperature
+    inp['t_min']      = 0.01    # minimum temperature
     inp['t_max']      = 5.0    # maximum temperature
     inp['t_step']     = 0.01    # step size from min to max temperature
     inp['T_array']    = None    # array of termperatures if intervals desired are not uniform
     inp['t_top']      = 4.0    # start temperature (arbitrary; feel free to change)
     inp['N']          = 100     # sqrt(lattice size) (i.e. lattice = N^2 points
-    inp['n_steps']    = 1000000  # number of lattice steps in simulation
+    inp['n_steps']    = 10000  # number of lattice steps in simulation
     inp['n_burnin']   = int(inp['n_steps']*0.5)   # optional parameter, used as naive default
     inp['n_analyze']  = int(inp['n_steps']*0.3)   # number of lattice steps at end of simulation calculated for averages and std.dev.
     # inp['J']          = 1.0    # **great** default value -- spin-spin interaction strength
@@ -120,6 +120,7 @@ def set_input(cmd_line_args):
         print('Printed list of input keys:')
         for key in sorted(inp.keys()):
             print('%-20s'%key,' ',inp[key])
+    inp['dir_out']+='_N'+str(inp['N'])
     return inp
 
 class check_progress(object):
