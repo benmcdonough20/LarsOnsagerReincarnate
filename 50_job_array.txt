@@ -1,0 +1,10 @@
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
+module load miniconda; conda activate qutip-env; ulimit -f 536870912; python3 ising_modified.py N:50 n_steps:5000000
