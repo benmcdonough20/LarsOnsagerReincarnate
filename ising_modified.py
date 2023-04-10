@@ -6,7 +6,7 @@ import logging
 # import click
 import numpy as np
 # import logging
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import multiprocessing as mp
 import datetime as dt
 # from IsingLattice import IsingLattice as IsingLattice_c
@@ -77,8 +77,6 @@ def set_input(cmd_line_args):
     inp['t_top']      = 4.0    # start temperature (arbitrary; feel free to change)
     inp['N']          = 100     # sqrt(lattice size) (i.e. lattice = N^2 points
     inp['n_steps']    = 10000  # number of lattice steps in simulation
-    inp['n_burnin']   = int(inp['n_steps']*0.5)   # optional parameter, used as naive default
-    inp['n_analyze']  = int(inp['n_steps']*0.3)   # number of lattice steps at end of simulation calculated for averages and std.dev.
     # inp['J']          = 1.0    # **great** default value -- spin-spin interaction strength
     inp['B']          = 0.0    # magnetic field strength
     inp['flip_perc']  = 0.1    # ratio of sites examined to flip in each step
@@ -121,6 +119,8 @@ def set_input(cmd_line_args):
         for key in sorted(inp.keys()):
             print('%-20s'%key,' ',inp[key])
     inp['dir_out']+='_N'+str(inp['N'])
+    inp['n_burnin']   = int(inp['n_steps']*0.5)   # optional parameter, used as naive default
+    inp['n_analyze']  = int(inp['n_steps']*0.3)   # number of lattice steps at end of simulation calculated for averages and std.dev.
     return inp
 
 class check_progress(object):
@@ -165,9 +165,9 @@ class check_progress(object):
             # print('est_time ', est_time)
             est_str = time.strftime('%H:%M:%S', time.gmtime(est_time))
         if final:
-            print(self.fmt_print%(self.n_called, ratio*100., time_pass_str, 'done!'))
+            print(self.fmt_print%(self.n_called, ratio*100.0, time_pass_str, 'done!'))
         else:
-            print(self.fmt_print%(self.n_called, ratio*100., time_pass_str, est_str), end='\r')
+            print(self.fmt_print%(self.n_called, ratio*100.0, time_pass_str, est_str), end='\r')
 
         
 # def check_progress(inp):
@@ -239,23 +239,23 @@ def run_ising_lattice(inp, T_final, skip_print=False):
         print("\n\nProgram terminated by keyboard. Good Bye!")
         sys.exit()
 
-def plot_graphs(data): #T,E_mean,E_std,M_mean,M_std): #plot graphs at end
-    dat = np.array(data)
-    # print('data: ', dat)
-    # print('x: ', dat[:,1])
-    # x = dat[:,1][0]
-    # print('xlist: ', x)
+# def plot_graphs(data): #T,E_mean,E_std,M_mean,M_std): #plot graphs at end
+#     dat = np.array(data)
+#     # print('data: ', dat)
+#     # print('x: ', dat[:,1])
+#     # x = dat[:,1][0]
+#     # print('xlist: ', x)
 
-    plt.figure(1)
-    # plt.ylim(0,1)
-    plt.errorbar(dat[:,0], dat[:,1], yerr=dat[:,2], fmt='o')
-    plt.xlabel('Temperature')
-    plt.ylabel('Average Site Energy')
-    plt.figure(2)
-    plt.errorbar(dat[:,0], np.absolute(dat[:,3]), yerr=dat[:,4], uplims=True, lolims=True,fmt='o')
-    plt.xlabel('Temperature')
-    plt.ylabel('Aveage Site Magnetization')
-    plt.show()
+#     plt.figure(1)
+#     # plt.ylim(0,1)
+#     plt.errorbar(dat[:,0], dat[:,1], yerr=dat[:,2], fmt='o')
+#     plt.xlabel('Temperature')
+#     plt.ylabel('Average Site Energy')
+#     plt.figure(2)
+#     plt.errorbar(dat[:,0], np.absolute(dat[:,3]), yerr=dat[:,4], uplims=True, lolims=True,fmt='o')
+#     plt.xlabel('Temperature')
+#     plt.ylabel('Aveage Site Magnetization')
+#     plt.show()
 
 def get_filenames(inp): #make data folder if doesn't exist, then specify filename
     '''Generate the output file names for the EM (energy and megnetism) and SC (spin correlation) files'''
@@ -406,8 +406,8 @@ def run_single_core(inp):
 
     print_results(inp, data, corr)
 
-    if inp['plots']:
-        plot_graphs(data)
+    # if inp['plots']:
+    #     plot_graphs(data)
 
 if __name__ == "__main__":
     """Main program: run Ising Lattice here"""
