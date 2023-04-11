@@ -263,8 +263,8 @@ def get_filenames(inp): #make data folder if doesn't exist, then specify filenam
         dir_out = inp['dir_out']
         prefix  = inp['file_prefix']
         if inp['date_output']:
-            dir_out += str(time.strftime("_%Y%m%d-%H%M%S"))
-
+            dir_out += str(time.strftime("_%Y%m%d-%H%M%S-%f"))
+        
         if not os.path.isdir(dir_out):
             os.makedirs(dir_out)
 
