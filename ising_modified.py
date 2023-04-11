@@ -70,9 +70,9 @@ def set_input(cmd_line_args):
     """
 
     inp = dict()
-    inp['t_min']      = 0.01    # minimum temperature
+    inp['t_min']      = 1    # minimum temperature
     inp['t_max']      = 5.0    # maximum temperature
-    inp['t_step']     = 0.01    # step size from min to max temperature
+    inp['t_step']     = 0.2    # step size from min to max temperature
     inp['T_array']    = None    # array of termperatures if intervals desired are not uniform
     inp['t_top']      = 4.0    # start temperature (arbitrary; feel free to change)
     inp['N']          = 100     # sqrt(lattice size) (i.e. lattice = N^2 points
@@ -263,7 +263,7 @@ def get_filenames(inp): #make data folder if doesn't exist, then specify filenam
         dir_out = inp['dir_out']
         prefix  = inp['file_prefix']
         if inp['date_output']:
-            dir_out += str(time.strftime("_%Y%m%d-%H%M%S-%f"))
+            dir_out += dt.datetime.now().strftime("_%Y%m%d-%H%M%S%f")
         
         if not os.path.isdir(dir_out):
             os.makedirs(dir_out)
