@@ -70,9 +70,9 @@ def set_input(cmd_line_args):
     """
 
     inp = dict()
-    inp['t_min']      = 0.01    # minimum temperature
+    inp['t_min']      = 1.0    # minimum temperature
     inp['t_max']      = 5.0    # maximum temperature
-    inp['t_step']     = 0.01    # step size from min to max temperature
+    inp['t_step']     = 1.0    # step size from min to max temperature
     inp['T_array']    = None    # array of termperatures if intervals desired are not uniform
     inp['t_top']      = 4.0    # start temperature (arbitrary; feel free to change)
     inp['N']          = 100     # sqrt(lattice size) (i.e. lattice = N^2 points
@@ -83,7 +83,7 @@ def set_input(cmd_line_args):
     inp['dir_out']    = 'data' # output directory for file output
     inp['plots']      = False  # whether or not plots are generated
                                
-    inp['print_inp']  = False  # temperature option
+    inp['print_inp']  = True  # temperature option
     inp['use_cpp']    = True   # use 1 for True and 0 for False
 
     inp['date_output'] = True
@@ -96,7 +96,9 @@ def set_input(cmd_line_args):
             try:
                 key, val = x.split(':')
                 try:
-                    if '.' in val:
+                    if ',' in val:
+                        inp[key]=[float(elt) for elt in val.split(',')]
+                    elif '.' in val:
                         inp[key] = float(val)
                         print('%-20s'%('inp["%s"]'%key),'set to float  ',inp[key])
                     elif val.lower() == 'false' or val.lower() == 'f':
@@ -113,14 +115,15 @@ def set_input(cmd_line_args):
                 print('warning: input "%s" not added to arguments'%x)
         else:
             print('ignoring command line input: %s'%x)
+    inp['dir_out']+='_N'+str(inp['N'])
+    inp['n_burnin']   = int(inp['n_steps']*0.5)   # optional parameter, used as naive default
+    inp['n_analyze']  = int(inp['n_steps']*0.3)   # number of lattice steps at end of simulation calculated for averages and std.dev.
 
     if inp['print_inp']:
         print('Printed list of input keys:')
         for key in sorted(inp.keys()):
             print('%-20s'%key,' ',inp[key])
-    inp['dir_out']+='_N'+str(inp['N'])
-    inp['n_burnin']   = int(inp['n_steps']*0.5)   # optional parameter, used as naive default
-    inp['n_analyze']  = int(inp['n_steps']*0.3)   # number of lattice steps at end of simulation calculated for averages and std.dev.
+
     return inp
 
 class check_progress(object):
