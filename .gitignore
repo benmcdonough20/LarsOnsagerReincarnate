@@ -6,3 +6,5 @@ __pycache__/
 *.dll
 data*
 ising_lattice_lib\.so
+data/
+jobs/
